@@ -12,7 +12,7 @@ def status_pages(session: api.Session, contest_url: str):
     for index in range(2, last_index):
         yield session.get_html(f'{contest_url}/status/page/{index}')
 
-def parse_verdict(text):
+def parse_verdict(text: str):
     split = text.split(' on test ')
     status = split[0].lower()
     test = 0 if len(split) <= 1 else int(split[1].strip())
