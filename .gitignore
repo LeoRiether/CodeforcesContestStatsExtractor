@@ -1,0 +1,12 @@
+# virtualenv
+bin/
+lib/
+
+# secrets
+credentials.py
+
+# python
+__pycache__
+
+# trash
+out.html
