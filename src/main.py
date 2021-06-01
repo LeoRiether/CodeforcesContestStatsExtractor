@@ -16,7 +16,6 @@ def main():
         log("Logged in!")
 
         result = extract(s, contest_url, log)
-
         print(json.dumps(result))
 
         log("Done!")

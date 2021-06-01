@@ -1,10 +1,13 @@
-from typing import List
+from typing import List, Iterator
 from collections import namedtuple
+import doctest
 import api
 
-Submission = namedtuple('Verdict', ['who', 'problem', 'lang', 'verdict', 'test', 'time', 'memory'])
+Submission = namedtuple('Verdict', ['when', 'who', 'problem', 'lang', 'verdict', 'test', 'time', 'memory'])
 
 def status_pages(session: api.Session, contest_url: str):
+    """ Returns an iterator over all status pages """
+
     first_page = session.get_html(contest_url + '/status')
     yield first_page
 
@@ -13,6 +16,19 @@ def status_pages(session: api.Session, contest_url: str):
         yield session.get_html(f'{contest_url}/status/page/{index}')
 
 def parse_verdict(text: str):
+    """
+        Parses a verdict status into a pair (verdict abbreviation, test number)
+
+        >>> parse_verdict("Accepted")
+        ("AC", 0)
+
+        >>> parse_verdict("Wrong answer on test 10")
+        ("WA", 10)
+
+        >>> parse_verdict("Memory limit exceeded on test 110")
+        ("MLE", 110)
+    """
+
     split = text.split(' on test ')
     status = split[0].lower()
     test = 0 if len(split) <= 1 else int(split[1].strip())
@@ -36,7 +52,7 @@ def parse_verdict(text: str):
 
     return abbr.get(status, '???'), test
 
-def submissions(page) -> List[Submission]:
+def submissions(page) -> Iterator[Submission]:
     rows = page.xpath('//table[@class="status-frame-datatable"]/tr[@data-submission-id]')
 
     def make_submission(row):
@@ -46,13 +62,14 @@ def submissions(page) -> List[Submission]:
         verdict, test = parse_verdict(xcontent('td[@submissionid]'))
 
         return Submission(
+            when = content(row[1]),
             who = xcontent('td[@data-participantid]'),
             problem = xcontent('td[@data-problemid]'),
             lang = content(row[4]),
             verdict = verdict,
             test = test,
-            time = xcontent('td[@class="time-consumed-cell"]'),
-            memory = xcontent('td[@class="memory-consumed-cell"]'),
+            time = int(xcontent('td[@class="time-consumed-cell"]')[:-2]), # in ms
+            memory = int(xcontent('td[@class="memory-consumed-cell"]')[:-2]), # in KB
         )
 
     return (
@@ -61,6 +78,10 @@ def submissions(page) -> List[Submission]:
     )
 
 def extract(session: api.Session, contest_url: str) -> List[Submission]:
+    """
+        Extracts all of the submissions of the status pages of a given contest
+    """
+
     return [
         submission
         for page in status_pages(session, contest_url)
