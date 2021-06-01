@@ -1,22 +1,32 @@
 import sys
-import json
-import config.credentials as creds
-from extract import extract
-import api
+import credentials as creds
+import session
+from extract import extract, Submission
 
-contest_url = 'https://codeforces.com/group/nituVTsHQX/contest/329742'
+contest_url = 'https://codeforces.com/group/nituVTsHQX/contest/328710/status'
 
 def log(*x):
     print(*x, file=sys.stderr)
 
+def output_csv(result):
+    import csv
+    w = csv.writer(sys.stdout)
+
+    w.writerow(Submission._fields) # header
+    for row in result:
+        w.writerow(row)
+
 def main():
-    log(f"Hello {creds.handle}! Logging you in...")
+    log(f"Hello \033[95m{creds.handle}\033[0m! Logging you in...")
 
-    with api.logged_in_session(creds.handle, creds.password) as s:
+    with session.logged_in(creds.handle, creds.password) as s:
         log("Logged in!")
+        log("Extracting...")
 
-        result = extract(s, contest_url, log)
-        print(json.dumps(result))
+        log_page = lambda index: log(f"Processed page \033[91m{index+1}\033[0m")
+
+        result = extract(s, contest_url, log_page)
+        output_csv(result)
 
         log("Done!")
 

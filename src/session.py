@@ -1,5 +1,5 @@
 import requests
-from lxml import html # type: ignore
+from lxml import html
 
 base_url = "https://codeforces.com"
 
@@ -14,7 +14,7 @@ def find_csrf(page):
         raise Exception("No CSRF token found")
     return tokens[0].value
 
-def logged_in_session(handle: str, password: str) -> Session:
+def logged_in(handle: str, password: str) -> Session:
     s = Session()
 
     login_page = s.get_html(base_url + '/enter')

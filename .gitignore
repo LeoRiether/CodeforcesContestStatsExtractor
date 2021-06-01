@@ -11,3 +11,4 @@ __pycache__
 # trash
 out.html
 output.json
+output.csv
